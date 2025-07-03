@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Patrimônio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo, useEffect, useCallback } = React;
+
+        // Ícones em SVG
+        const icons = {
+          menu: (props) => (
+            <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="4" x2="20" y1="12" y2="12" />
+              <line x1="4" x2="20" y1="6" y2="6" />
+              <line x1="4" x2="20" y1="18" y2="18" />
+            </svg>
+          ),
+          x: (props) => (
+            <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          ),
+          search: (props) => (
+            <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+          ),
+          chevronRight: (props) => (
+            <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          ),
+          chevronLeft: (props) => (
+              <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m15 18-6-6 6-6"/>
+              </svg>
+          ),
+          chevronDown: (props) => (
+            <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          ),
+        };
+
+        // --- DADOS MOCKADOS ---
+        const bensOciososData = [
+          { id: 1, nome: 'Cadeira Giratória Executiva', categoria: 'Mobiliário', estado: 'Ótimo', tombamento: '102345', imagem: 'https://placehold.co/600x400/e2e8f0/4a5568?text=Cadeira', descricao: 'Cadeira giratória com ajuste de altura e encosto reclinável. Estofado em tecido preto, em perfeito estado de conservação.', dimensoes: '60cm x 60cm x 110cm', marca: 'Flexform', modelo: 'Office Standard' },
+          { id: 2, nome: 'Monitor LED 24" Full HD', categoria: 'Equipamentos de TI', estado: 'Bom', tombamento: '205678', imagem: 'https://placehold.co/600x400/e2e8f0/4a5568?text=Monitor', descricao: 'Monitor Dell de 24 polegadas, resolução Full HD (1920x1080). Possui pequenas marcas de uso na base, mas a tela está impecável. Acompanha cabo de força e HDMI.', dimensoes: '55cm x 40cm x 15cm', marca: 'Dell', modelo: 'P2419H' },
+          { id: 3, nome: 'Armário de Aço 2 Portas', categoria: 'Mobiliário', estado: 'Bom', tombamento: '101112', imagem: 'https://placehold.co/600x400/e2e8f0/4a5568?text=Armário', descricao: 'Armário de aço com 2 portas e 4 prateleiras internas. Ideal para guardar documentos e materiais. Possui alguns arranhões na pintura.', dimensoes: '90cm x 45cm x 180cm', marca: 'Pandim', modelo: 'Standard' },
+          { id: 4, nome: 'Projetor Multimídia Epson', categoria: 'Equipamentos de TI', estado: 'Ótimo', tombamento: '207890', imagem: 'https://placehold.co/600x400/e2e8f0/4a5568?text=Projetor', descricao: 'Projetor Epson PowerLite S41+. Pouquíssimo uso, lâmpada com menos de 100 horas. Acompanha controle remoto e maleta de transporte.', dimensoes: '30cm x 25cm x 10cm', marca: 'Epson', modelo: 'PowerLite S41+' },
+          { id: 5, nome: 'Mesa de Reunião Oval - 6 lugares', categoria: 'Mobiliário', estado: 'Bom', tombamento: '103344', imagem: 'https://placehold.co/600x400/e2e8f0/4a5568?text=Mesa+de+Reunião', descricao: 'Mesa de reunião em MDF com acabamento em madeira escura. Comporta confortavelmente 6 pessoas. Leves marcas de uso na superfície.', dimensoes: '200cm x 100cm x 75cm', marca: 'Mareli', modelo: 'Classic' },
+        ];
+
+        const categorias = ['Mobiliário', 'Equipamentos de TI', 'Eletrodomésticos', 'Equipamentos de Laboratório'];
+
+        // --- COMPONENTES DA UI ---
+
+        const Header = ({ onNavigate }) => {
+          const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+          const [isServicesSubmenuOpen, setServicesSubmenuOpen] = useState(false);
+
+          const navLinks = [
+            { label: 'Início', page: 'home' },
+            {
+              label: 'Serviços',
+              page: 'servicos',
+              submenu: [
+                { label: 'Tombamentos', page: 'servicos' },
+                { label: 'Transferências', page: 'servicos' },
+                { label: 'Desfazimentos', page: 'servicos' },
+                { label: 'Saída de Bens', page: 'servicos' },
+              ]
+            },
+            { label: 'Bens Ociosos', page: 'bens' },
+            { label: 'Guias e Tutoriais', page: 'guias' },
+            { label: 'Contato', page: 'contato' },
+          ];
+
+          const logoUrl = "https://placehold.co/300x80/ffffff/000000?text=SUA+LOGO+AQUI";
+
+          return (
+            <header className="bg-white text-slate-800 shadow-md sticky top-0 z-40">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between h-20">
+                  <div className="flex items-center">
+                    <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('home'); }} className="flex items-center">
+                       <img src={logoUrl} alt="Logo Patrimônio" className="h-16" />
+                    </a>
+                  </div>
+                  <div className="hidden md:block">
+                    <nav className="ml-10 flex items-baseline space-x-1">
+                      {navLinks.map(link => (
+                        link.submenu ? (
+                          <div key={link.label} className="relative group">
+                            <button
+                              className="px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-slate-100 hover:text-slate-900 transition-colors flex items-center"
+                            >
+                              <span>{link.label}</span>
+                              <icons.chevronDown className="ml-1 h-5 w-5 text-gray-400" />
+                            </button>
+                            <div className="absolute z-10 mt-1 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 invisible group-hover:visible">
+                              <div className="py-1">
+                                {link.submenu.map(item => (
+                                  <a
+                                    key={item.label}
+                                    href="#"
+                                    onClick={(e) => { e.preventDefault(); onNavigate(item.page); }}
+                                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                  >
+                                    {item.label}
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <a
+                            key={link.label}
+                            href="#"
+                            onClick={(e) => { e.preventDefault(); onNavigate(link.page); }}
+                            className="px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                          >
+                            {link.label}
+                          </a>
+                        )
+                      ))}
+                    </nav>
+                  </div>
+                  <div className="-mr-2 flex md:hidden">
+                    <button onClick={() => setMobileMenuOpen(!isMobileMenuOpen)} className="bg-slate-100 inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-slate-800 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-white">
+                      <span className="sr-only">Abrir menu</span>
+                      {isMobileMenuOpen ? <icons.x className="block h-6 w-6" /> : <icons.menu className="block h-6 w-6" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              {isMobileMenuOpen && (
+                <div className="md:hidden">
+                  <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    {navLinks.map(link => (
+                      link.submenu ? (
+                        <div key={link.label}>
+                          <button onClick={() => setServicesSubmenuOpen(!isServicesSubmenuOpen)} className="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-slate-100 hover:text-slate-900 transition-colors">
+                            <span>{link.label}</span>
+                            <icons.chevronDown className={`ml-2 h-5 w-5 transform transition-transform ${isServicesSubmenuOpen ? 'rotate-180' : ''}`} />
+                          </button>
+                          {isServicesSubmenuOpen && (
+                            <div className="pl-4 mt-1 space-y-1">
+                              {link.submenu.map(item => (
+                                 <a key={item.label} href="#" onClick={(e) => { e.preventDefault(); onNavigate(item.page); setMobileMenuOpen(false); }} className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-slate-100 hover:text-slate-900 transition-colors">
+                                    {item.label}
+                                  </a>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <a key={link.label} href="#" onClick={(e) => { e.preventDefault(); onNavigate(link.page); setMobileMenuOpen(false); }} className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-slate-100 hover:text-slate-900 transition-colors">
+                          {link.label}
+                        </a>
+                      )
+                    ))}
+                  </div>
+                </div>
+              )}
+            </header>
+          );
+        };
+
+        const Footer = () => (
+          <footer className="bg-slate-800 text-white">
+            <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div><h3 className="text-lg font-semibold text-green-400">Seção de Patrimônio</h3><p className="mt-2 text-sm text-gray-300">Eficiência e Transparência a um Clique.</p></div>
+                <div><h3 className="text-lg font-semibold text-green-400">Contato</h3><ul className="mt-2 space-y-1 text-sm text-gray-300"><li>Sala: Bloco A, Sala 101</li><li>Ramal: 1234</li><li>Email: patrimonio.instituicao@gov.br</li></ul></div>
+                <div><h3 className="text-lg font-semibold text-green-400">Links Úteis</h3><ul className="mt-2 space-y-1 text-sm"><li><a href="#" className="text-gray-300 hover:text-white">Portal da Instituição</a></li><li><a href="#" className="text-gray-300 hover:text-white">Intranet</a></li></ul></div>
+              </div>
+              <div className="mt-8 border-t border-slate-700 pt-4 text-center text-sm text-gray-400"><p>&copy; {new Date().getFullYear()} Seção de Patrimônio. Todos os direitos reservados.</p></div>
+            </div>
+          </footer>
+        );
+
+        const BannerCarousel = ({ onNavigate }) => {
+            const slides = [
+                { image: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2084&auto=format&fit=crop", title: "Eficiência e Transparência a um clique", subtitle: "Acesse todos os nossos serviços, guias e consulte os bens disponíveis para sua seção de forma rápida e digital.", buttonText: "Nossos Serviços", page: "servicos" },
+                { image: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=2232&auto=format&fit=crop", title: "Consulte Bens Ociosos", subtitle: "Navegue em nosso catálogo de itens disponíveis para transferência imediata para o seu setor.", buttonText: "Ver Catálogo", page: "bens" },
+                { image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2070&auto=format&fit=crop", title: "Dúvidas? Acesse nossos guias e modelos", subtitle: "Encontre tutoriais, passo a passo e documentos padrão para otimizar suas solicitações.", buttonText: "Acessar Guias", page: "guias" }
+            ];
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const prevSlide = () => setCurrentIndex(currentIndex === 0 ? slides.length - 1 : currentIndex - 1);
+            const nextSlide = useCallback(() => setCurrentIndex(currentIndex === slides.length - 1 ? 0 : currentIndex + 1), [currentIndex, slides.length]);
+            const goToSlide = (slideIndex) => setCurrentIndex(slideIndex);
+            useEffect(() => { const slideInterval = setInterval(nextSlide, 5000); return () => clearInterval(slideInterval); }, [nextSlide]);
+
+            return (
+                <div className="h-[60vh] w-full m-auto relative group">
+                    <div style={{ backgroundImage: `url(${slides[currentIndex].image})` }} className="w-full h-full bg-center bg-cover transition-all duration-500"><div className="w-full h-full flex flex-col items-center justify-center text-center bg-slate-800 bg-opacity-60 p-4"><h1 className="text-white text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl drop-shadow-lg">{slides[currentIndex].title}</h1><p className="mt-6 max-w-2xl mx-auto text-xl text-slate-200 drop-shadow-md">{slides[currentIndex].subtitle}</p><button onClick={() => onNavigate(slides[currentIndex].page)} className="mt-8 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-md transition-colors text-lg shadow-lg">{slides[currentIndex].buttonText}</button></div></div>
+                    <div className="hidden group-hover:block absolute top-[50%] -translate-y-[-50%] left-5 text-2xl rounded-full p-2 bg-black/20 text-white cursor-pointer"><icons.chevronLeft onClick={prevSlide} size={30} /></div>
+                    <div className="hidden group-hover:block absolute top-[50%] -translate-y-[-50%] right-5 text-2xl rounded-full p-2 bg-black/20 text-white cursor-pointer"><icons.chevronRight onClick={nextSlide} size={30} /></div>
+                    <div className="flex top-4 justify-center py-2 absolute bottom-5 left-0 right-0">{slides.map((_, slideIndex) => (<div key={slideIndex} onClick={() => goToSlide(slideIndex)} className={`text-2xl cursor-pointer mx-1 ${currentIndex === slideIndex ? 'text-white' : 'text-gray-400'}`}>●</div>))}</div>
+                </div>
+            );
+        };
+
+        const BemCard = ({ bem, onSelect }) => {
+          const stateColor = { 'Ótimo': 'bg-green-100 text-green-800', 'Bom': 'bg-blue-100 text-blue-800', 'Requer Reparo': 'bg-yellow-100 text-yellow-800' };
+          return (
+            <div onClick={() => onSelect(bem)} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group h-full flex flex-col">
+              <div className="relative"><img className="h-56 w-full object-cover" src={bem.imagem} alt={bem.nome} /><div className={`absolute top-2 right-2 px-2 py-1 text-xs font-semibold rounded-full ${stateColor[bem.estado]}`}>{bem.estado}</div></div>
+              <div className="p-4 flex-grow flex flex-col"><p className="text-sm text-gray-500">{bem.categoria}</p><h3 className="text-lg font-semibold text-slate-800 mt-1 truncate group-hover:text-green-600 flex-grow">{bem.nome}</h3><button className="mt-4 w-full text-green-600 font-semibold text-sm text-left">Ver detalhes <icons.chevronRight className="inline h-4 w-4" /></button></div>
+            </div>
+          );
+        };
+
+        const AcessoRapido = ({ onNavigate }) => (
+            <div className="bg-slate-50 py-16 sm:py-24">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 className="text-3xl font-bold text-center text-slate-900 mb-12">Acesso Rápido</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                  <div onClick={() => onNavigate('bens')} className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer flex flex-col items-center text-center"><h3 className="text-xl font-semibold text-slate-800">Consultar Bens Ociosos</h3><p className="mt-2 text-slate-600">Navegue em nosso catálogo de itens disponíveis para transferência.</p></div>
+                  <div onClick={() => onNavigate('servicos')} className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer flex flex-col items-center text-center"><h3 className="text-xl font-semibold text-slate-800">Solicitar Tombamento</h3><p className="mt-2 text-slate-600">Precisa registrar um novo bem? Abra sua solicitação aqui.</p></div>
+                  <div onClick={() => onNavigate('servicos')} className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer flex flex-col items-center text-center"><h3 className="text-xl font-semibold text-slate-800">Desfazimento</h3><p className="mt-2 text-slate-600">Precisa se desfazer de algum bem? Entenda como funciona o processo</p></div>
+                  <div onClick={() => onNavigate('servicos')} className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer flex flex-col items-center text-center"><h3 className="text-xl font-semibold text-slate-800">Transferências</h3><p className="mt-2 text-slate-600">Precisa de serviços de transferência interna ou externa? Entenda como funciona o processo.</p></div>
+                  <div onClick={() => onNavigate('servicos')} className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer flex flex-col items-center text-center"><h3 className="text-xl font-semibold text-slate-800">Inventário Anual</h3><p className="mt-2 text-slate-600">Acesse as informações e procedimentos do inventário.</p></div>
+                </div>
+              </div>
+            </div>
+        );
+
+        const BensOciososPreview = ({ onNavigate, onSelectBem }) => {
+            const previewItems = bensOciososData.slice(0, 8);
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const itemsPerPage = 3; 
+            const next = () => { if (currentIndex < (previewItems.length - itemsPerPage)) setCurrentIndex(prevState => prevState + 1); };
+            const prev = () => { if (currentIndex > 0) setCurrentIndex(prevState => prevState - 1); };
+
+            return (
+                <div className="bg-white py-16 sm:py-24">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-bold text-slate-900">Catálogo de Ociosos</h2><button onClick={() => onNavigate('bens')} className="hidden lg:inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-green-600 text-white shadow hover:bg-green-700 h-9 px-4 py-2">Ver catálogo<icons.chevronRight className="h-4 w-4 ml-2" /></button></div>
+                        <div className="relative">
+                            <div className="hidden lg:block overflow-hidden"><div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${currentIndex * (100 / itemsPerPage)}%)` }}>{previewItems.map(bem => (<div key={bem.id} className="flex-shrink-0 w-full lg:w-1/3 px-2"><BemCard bem={bem} onSelect={onSelectBem} /></div>))}</div></div>
+                            <div className="lg:hidden flex overflow-x-auto space-x-4 pb-4 -mx-4 px-4">{previewItems.map(bem => (<div key={bem.id} className="flex-shrink-0 w-3/4 sm:w-1/2 md:w-2/5"><BemCard bem={bem} onSelect={onSelectBem} /></div>))}</div>
+                            <button onClick={prev} className={`hidden lg:block absolute top-1/2 -left-4 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md hover:bg-slate-100 transition ${currentIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={currentIndex === 0}><icons.chevronLeft className="h-6 w-6 text-slate-700" /></button>
+                            <button onClick={next} className={`hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md hover:bg-slate-100 transition ${currentIndex >= (previewItems.length - itemsPerPage) ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={currentIndex >= (previewItems.length - itemsPerPage)}><icons.chevronRight className="h-6 w-6 text-slate-700" /></button>
+                        </div>
+                        <div className="mt-8 text-center lg:hidden"><button onClick={() => onNavigate('bens')} className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-green-600 text-white shadow hover:bg-green-700 h-10 px-8">Ver catálogo</button></div>
+                    </div>
+                </div>
+            );
+        }
+
+        const HomePage = ({ onNavigate, onSelectBem }) => (
+          <>
+            <BannerCarousel onNavigate={onNavigate} />
+            <AcessoRapido onNavigate={onNavigate} />
+            <BensOciososPreview onNavigate={onNavigate} onSelectBem={onSelectBem} />
+          </>
+        );
+
+        const BensOciososPage = ({ onSelectBem, onNavigate }) => {
+          const [searchTerm, setSearchTerm] = useState('');
+          const [selectedCategory, setSelectedCategory] = useState('Todas');
+          const [selectedState, setSelectedState] = useState('Todos');
+          const filteredBens = useMemo(() => bensOciososData.filter(bem => (bem.nome.toLowerCase().includes(searchTerm.toLowerCase()) || bem.descricao.toLowerCase().includes(searchTerm.toLowerCase())) && (selectedCategory === 'Todas' || bem.categoria === selectedCategory) && (selectedState === 'Todos' || bem.estado === selectedState)), [searchTerm, selectedCategory, selectedState]);
+
+          return (
+            <div className="bg-slate-50">
+              <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-12"><h1 className="text-4xl font-bold text-slate-900">Catálogo de Bens Ociosos</h1><p className="mt-2 text-lg text-slate-600">Encontre itens disponíveis para o seu setor.</p></div>
+                <div className="flex flex-col md:flex-row gap-8">
+                  <aside className="w-full md:w-1/4 lg:w-1/5"><div className="bg-white p-6 rounded-lg shadow-md sticky top-24"><h3 className="text-xl font-semibold text-slate-800 mb-4">Filtros</h3><div className="relative mb-4"><input type="text" placeholder="Buscar por item..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500" /><div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><icons.search className="h-5 w-5 text-gray-400" /></div></div><div className="mb-4"><label className="block text-sm font-medium text-gray-700 mb-2">Categoria</label><select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="w-full p-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"><option>Todas</option>{categorias.map(cat => <option key={cat}>{cat}</option>)}</select></div><div><label className="block text-sm font-medium text-gray-700 mb-2">Estado de Conservação</label><select value={selectedState} onChange={(e) => setSelectedState(e.target.value)} className="w-full p-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"><option>Todos</option><option>Ótimo</option><option>Bom</option><option>Requer Reparo</option></select></div></div></aside>
+                  <main className="w-full md:w-3/4 lg:w-4/5">
+                    {filteredBens.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">{filteredBens.map(bem => (<BemCard key={bem.id} bem={bem} onSelect={onSelectBem} />))}</div>
+                    ) : (
+                      <div className="text-center bg-white p-12 rounded-lg shadow-md"><h3 className="text-2xl font-semibold text-slate-800">Nenhum item encontrado com os filtros atuais.</h3><p className="mt-2 text-slate-600">Tente ajustar sua busca ou solicite o item na nossa lista de espera.</p></div>
+                    )}
+                  </main>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const DetalheBemPage = ({ bem, onBack }) => {
+          const numeroWhatsApp = '5531999999999'; 
+          const mensagemWhatsApp = `Olá! Tenho interesse em solicitar o seguinte bem ocioso disponível no portal do Patrimônio:\n\n*Item:* ${bem.nome}\n*Tombamento:* ${bem.tombamento}\n\nPoderia me orientar sobre os próximos passos?`;
+          const linkWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensagemWhatsApp)}`;
+          const stateColor = { 'Ótimo': 'bg-green-100 text-green-800 border-green-300', 'Bom': 'bg-blue-100 text-blue-800 border-blue-300', 'Requer Reparo': 'bg-yellow-100 text-yellow-800 border-yellow-300' };
+
+          return (
+            <div className="bg-white py-12">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <button onClick={onBack} className="text-slate-600 hover:text-slate-900 mb-8 font-semibold">&larr; Voltar para o catálogo</button>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                  <div><img src={bem.imagem} alt={bem.nome} className="w-full h-auto object-cover rounded-lg shadow-lg" /></div>
+                  <div><p className="text-sm font-semibold text-green-600">{bem.categoria}</p><h1 className="text-4xl font-bold text-slate-900 mt-2">{bem.nome}</h1><div className="mt-4 flex items-center space-x-4"><span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold border ${stateColor[bem.estado]}`}>{bem.estado}</span><span className="text-slate-500">Tombamento: {bem.tombamento}</span></div><div className="mt-8"><h2 className="text-xl font-semibold text-slate-800">Descrição</h2><p className="mt-2 text-slate-600 leading-relaxed">{bem.descricao}</p></div><div className="mt-6"><h3 className="text-lg font-semibold text-slate-800">Detalhes Adicionais</h3><ul className="mt-2 text-slate-600 space-y-1 list-disc list-inside"><li><strong>Marca/Modelo:</strong> {bem.marca} / {bem.modelo}</li><li><strong>Dimensões:</strong> {bem.dimensoes}</li></ul></div><div className="mt-10"><a href={linkWhatsApp} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg transition-colors text-lg">Solicitar via WhatsApp</a><p className="text-center mt-3 text-sm text-slate-500">Você será redirecionado para o WhatsApp com uma mensagem pronta.</p></div></div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const PlaceholderPage = ({ title, subtitle }) => (
+          <div className="bg-white">
+            <div className="max-w-4xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8 text-center"><h1 className="text-4xl font-extrabold tracking-tight text-slate-900">{title}</h1><p className="mt-4 max-w-2xl mx-auto text-xl text-slate-500">{subtitle}</p><div className="mt-8 border-t-2 border-dashed border-gray-200 pt-8"><p className="text-slate-600">Esta página está em construção. Em breve, você encontrará aqui todas as funcionalidades descritas.</p></div></div>
+          </div>
+        );
+
+        function App() {
+          const [currentPage, setCurrentPage] = useState('home');
+          const [pageState, setPageState] = useState({});
+
+          const handleNavigate = (page, state = {}) => { setPageState(state); setCurrentPage(page); window.scrollTo(0, 0); };
+          const handleSelectBem = (bem) => { setPageState({ bem }); setCurrentPage('detalheBem'); window.scrollTo(0, 0); };
+          const handleBackToCatalog = () => { setPageState({}); setCurrentPage('bens'); };
+          
+          const renderPage = () => {
+            switch (currentPage) {
+              case 'home': return <HomePage onNavigate={handleNavigate} onSelectBem={handleSelectBem} />;
+              case 'bens': return <BensOciososPage onSelectBem={handleSelectBem} onNavigate={handleNavigate} />;
+              case 'detalheBem': return <DetalheBemPage bem={pageState.bem} onBack={handleBackToCatalog} />;
+              case 'servicos': return <PlaceholderPage title="Serviços e Solicitações" subtitle="Centralize aqui seus pedidos de movimentação, baixa e upload de documentos." />;
+              case 'guias': return <PlaceholderPage title="Guias e Tutoriais" subtitle="Nossa base de conhecimento para padronizar procedimentos e tirar dúvidas." />;
+              case 'contato': return <PlaceholderPage title="Contato" subtitle="Fale com a Seção de Patrimônio." />;
+              default: return <HomePage onNavigate={handleNavigate} onSelectBem={handleSelectBem}/>;
+            }
+          };
+
+          return (
+            <div className="bg-slate-50 font-sans antialiased">
+              <Header onNavigate={handleNavigate} />
+              <main>{renderPage()}</main>
+              <Footer />
+            </div>
+          );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
