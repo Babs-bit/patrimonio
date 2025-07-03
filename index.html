@@ -57,6 +57,13 @@
                 <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
           ),
+          info: (props) => (
+            <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="16" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+          ),
         };
 
         // --- DADOS MOCKADOS ---
@@ -93,7 +100,7 @@
             { label: 'Contato', page: 'contato' },
           ];
 
-          const logoUrl = "https://github.com/Babs-bit/patrimonio/blob/main/logo2.PNG?raw=true";
+          const logoUrl = "https://i.imgur.com/Wq2Ok6B.png";
 
           return (
             <header className="bg-white text-slate-800 shadow-md sticky top-0 z-40">
@@ -188,11 +195,11 @@
           <footer className="bg-slate-800 text-white">
             <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div><h3 className="text-lg font-semibold text-green-400">Seção de Patrimônio</h3><p className="mt-2 text-sm text-gray-300">Eficiência e Transparência a um clique.</p></div>
-                <div><h3 className="text-lg font-semibold text-green-400">Contato</h3><ul className="mt-2 space-y-1 text-sm text-gray-300"><li>Sala: 2911</li><li>Ramal: 2458</li><li>Email: spatr@odonto.ufmg.br</li></ul></div>
+                <div><h3 className="text-lg font-semibold text-green-400">Seção de Patrimônio</h3><p className="mt-2 text-sm text-gray-300">Eficiência e Transparência a um Clique.</p></div>
+                <div><h3 className="text-lg font-semibold text-green-400">Contato</h3><ul className="mt-2 space-y-1 text-sm text-gray-300"><li>Sala: Bloco A, Sala 101</li><li>Ramal: 1234</li><li>Email: patrimonio.instituicao@gov.br</li></ul></div>
                 <div><h3 className="text-lg font-semibold text-green-400">Links Úteis</h3><ul className="mt-2 space-y-1 text-sm"><li><a href="#" className="text-gray-300 hover:text-white">Portal da Instituição</a></li><li><a href="#" className="text-gray-300 hover:text-white">Intranet</a></li></ul></div>
               </div>
-              <div className="mt-8 border-t border-slate-700 pt-4 text-center text-sm text-gray-400"><p>&copy; {new Date().getFullYear()} Seção de Patrimônio FAO UFMG. Todos os direitos reservados.</p></div>
+              <div className="mt-8 border-t border-slate-700 pt-4 text-center text-sm text-gray-400"><p>&copy; {new Date().getFullYear()} Seção de Patrimônio. Todos os direitos reservados.</p></div>
             </div>
           </footer>
         );
@@ -266,12 +273,84 @@
                 </div>
             );
         }
+        
+        const SolicitarTombamento = ({ onNavigate }) => {
+            const [isModalOpen, setModalOpen] = useState(false);
+            const [selectedCategory, setSelectedCategory] = useState(null);
+            
+            const categories = { 
+                FUNDEP: { key: 'FUNDEP', title: "Tombamento via FUNDEP", text: (<span>Para tombamentos via projetos Fundep é obrigatória a apresentação do <strong>Termo de Depósito</strong>. Caso não possua o documento, entre em contato com a Fundação para solicitar o envio.</span>), type: 'form' }, 
+                CNPQ: { key: 'CNPQ', title: "Tombamento via CNPQ", text: "Para tombamento via projetos CNPQ é obrigatória a apresentação da Nota Fiscal e dados completos do projeto e coordenador.", type: 'form' }, 
+                DOACAO: { key: 'DOACAO', title: "Tombamento por Doação Particular", text: "Para doações de cunho particular é obrigatória a apresentação da Nota Fiscal do bem e dados completos do doador.", type: 'form' },
+                OUTROS: { key: 'OUTROS', title: "Outros Casos de Tombamento", text: "Caso sua solicitação não se enquadre nas demais categorias, entre em contato diretamente com a seção de patrimônio pelo email spatr@odonto.ufmg.br.", type: 'info' }
+            };
+
+            const handleOpenModal = (categoryKey) => {
+                setSelectedCategory(categories[categoryKey]);
+                setModalOpen(true);
+            };
+
+            const handleCloseModal = () => {
+                setModalOpen(false);
+                setSelectedCategory(null);
+            };
+
+            const handleProsseguir = (categoryKey) => {
+                // Futuramente, esta função navegará para a página do formulário
+                alert(`Prosseguindo para o formulário de ${categoryKey}`);
+                handleCloseModal();
+            };
+
+            return (
+                <div className="bg-slate-50 py-16 sm:py-24">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <h2 className="text-3xl font-bold text-center text-slate-900 mb-4">Solicitar Tombamento de Bem</h2>
+                        <p className="text-center text-lg text-slate-600 mb-12">Selecione a origem do bem para ver as instruções e iniciar a solicitação.</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                            <div onClick={() => handleOpenModal('FUNDEP')} className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer text-center"><h3 className="text-xl font-semibold text-slate-800">FUNDEP</h3></div>
+                            <div onClick={() => handleOpenModal('CNPQ')} className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer text-center"><h3 className="text-xl font-semibold text-slate-800">CNPQ</h3></div>
+                            <div onClick={() => handleOpenModal('DOACAO')} className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer text-center"><h3 className="text-xl font-semibold text-slate-800">Doação Particular</h3></div>
+                            <div onClick={() => handleOpenModal('OUTROS')} className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer text-center"><h3 className="text-xl font-semibold text-slate-800">Outros</h3></div>
+                        </div>
+                    </div>
+                    {isModalOpen && <TombamentoModal isOpen={isModalOpen} onClose={handleCloseModal} categoryInfo={selectedCategory} onProsseguir={handleProsseguir} />}
+                </div>
+            );
+        };
+
+        const TombamentoModal = ({ isOpen, onClose, categoryInfo, onProsseguir }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
+                    <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
+                        <div className="flex items-start">
+                            <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <icons.info className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div className="ml-4 text-left">
+                                <h3 className="text-lg leading-6 font-medium text-gray-900">{categoryInfo.title}</h3>
+                                <div className="mt-2">
+                                    <p className="text-sm text-gray-500">{categoryInfo.text}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                            {categoryInfo.type === 'form' && (
+                                <button type="button" className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm" onClick={() => onProsseguir(categoryInfo.key)}>Prosseguir</button>
+                            )}
+                            <button type="button" className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm" onClick={onClose}>{categoryInfo.type === 'info' ? 'Fechar' : 'Voltar'}</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
 
         const HomePage = ({ onNavigate, onSelectBem }) => (
           <>
             <BannerCarousel onNavigate={onNavigate} />
             <AcessoRapido onNavigate={onNavigate} />
             <BensOciososPreview onNavigate={onNavigate} onSelectBem={onSelectBem} />
+            <SolicitarTombamento onNavigate={onNavigate} />
           </>
         );
 
